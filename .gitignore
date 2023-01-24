@@ -6,7 +6,7 @@
 *.dylib
 dist/
 tmp/
-
+public/releases
 # Test binary, built with `go test -c`
 *.test
 
@@ -15,3 +15,6 @@ tmp/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+/tmdbs.ls
+/indxs.ls
+/rutor.ls
