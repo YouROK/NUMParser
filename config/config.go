@@ -1,4 +1,6 @@
 package config
 
-const SaveReleasePath = "tmp"
+// const SaveReleasePath = "/home/yourok/numParser/releases"
+const SaveReleasePath = "public/releases"
+
 const ReleasesLimit = 0
