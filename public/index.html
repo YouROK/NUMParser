@@ -176,19 +176,19 @@
 
             filtred.forEach(function(elem){
                 const item = $(`<div class="webResult item">
-                    <p><a href="`+elem.url+`" target="_blank">`+elem.title+`</a></p>
+                    <p><a href="`+elem.Link+`" target="_blank">`+elem.Title+`</a></p>
                     <div class="info"></div>
                     <div class="h2">
-						<img class="trackerIco" src="./img/ico/`+elem.tracker+`.ico">
-                        `+elem.tracker+`
+						<img class="trackerIco" src="./img/ico/`+elem.Tracker+`.ico">
+                        `+elem.Tracker+`
                         <span class="webResultTitle"> 
-                            <span class="size">`+elem.sizeName+`</span> 
+                            <span class="size">`+elem.Size+`</span>
                             <span class="date">`+elem.dateHuman+`</span>
-                            <span class="seeders">⬆ `+(elem.sid || 0)+`</span> 
-                            <span class="leechers">⬇ `+(elem.pir || 0)+`</span>
+                            <span class="seeders">⬆ `+(elem.Seed || 0)+`</span>
+                            <span class="leechers">⬇ `+(elem.Peer || 0)+`</span>
 
                             <span class="magnet">
-                                <a class="magneto ut-download-url" href="`+elem.magnet+`"></a>
+                                <a class="magneto ut-download-url" href="`+elem.Magnet+`"></a>
                             </span>
                         </span>
                     </div>
@@ -256,16 +256,16 @@
             let quality = []
 
             results.forEach(element => {
-                if(element.voices && element.voices.length){
-                    element.voices.forEach(voice => {
+                if(element.AudioQuality && element.AudioQuality.length){
+                    element.AudioQuality.forEach(voice => {
                         if(filter_search.voice.indexOf(voice) == -1) filter_search.voice.push(voice)
                     })
                 }
 
-                if(filter_search.tracker.indexOf(element.tracker) === -1) filter_search.tracker.push(element.tracker)
+                if(filter_search.tracker.indexOf(element.Tracker) === -1) filter_search.tracker.push(element.Tracker)
 
-                if(years.indexOf(element.relased) === -1 && element.relased) years.push(element.relased)
-                if(quality.indexOf(element.quality) === -1 && element.quality) quality.push(element.quality)
+                if(years.indexOf(element.Year) === -1 && element.Year) years.push(element.Year)
+                if(quality.indexOf(element.VideoQuality) === -1 && element.VideoQuality) quality.push(element.VideoQuality)
 
                 if(element.seasons && element.seasons.length){
                     element.seasons.forEach(s=>{
@@ -340,7 +340,7 @@
                 if(type || refine || exclude || quality !== "Любое"  || year !== "Любой" || tracker !== "Любой" || voice !== "Любая" || season !== "Любой"|| category !== "Любая") any = true
 
                 if(quality !== "Любое"){
-                    if(element.quality == parseInt(quality)) pass = true
+                    if(element.VideoQuality == parseInt(quality)) pass = true
                     else nopass = true
                 }
 
@@ -350,12 +350,12 @@
                 } 
 
                 if(tracker !== "Любой"){
-                    if(element.tracker == tracker) pass = true
+                    if(element.Tracker == tracker) pass = true
                     else nopass = true
                 } 
 
                 if(voice !== "Любая"){
-                    if(element.voices.indexOf(voice) !== -1) pass = true
+                    if(element.AudioQuality.indexOf(voice) !== -1) pass = true
                     else nopass = true
                 }
 
@@ -370,17 +370,17 @@
                 }
 
                 if(year !== "Любой"){
-                    if(element.relased == parseInt(year)) pass = true
+                    if(element.Year == parseInt(year)) pass = true
                     else nopass = true
                 }
 
                 if(refine){
-                    if(element.title.toLowerCase().indexOf(refine.toLowerCase()) !== -1) pass = true
+                    if(element.Title.toLowerCase().indexOf(refine.toLowerCase()) !== -1) pass = true
                     else nopass = true
                 }
 
                 if(exclude){
-                    if(element.title.toLowerCase().indexOf(exclude.toLowerCase()) == -1) pass = true
+                    if(element.Title.toLowerCase().indexOf(exclude.toLowerCase()) == -1) pass = true
                     else nopass = true
                 }
 
@@ -390,53 +390,6 @@
                 }
                 else return true
             })
-        }
-
-        function checkKey(key, call, cancel){
-            $.ajax({
-                dataType: 'json',
-                url: '/api/v1.0/conf?apikey='+encodeURIComponent(key),
-                crossDomain: true,
-                success: (json) => {
-                    if(json.apikey){
-                        window.localStorage.setItem('api_key', key)
-
-                        call()
-                    }
-                    else{
-                        let enter_key = prompt('Ключ не вернный, введите ключ')
-
-                        if(enter_key) checkKey(enter_key, call, cancel)
-                        else cancel()
-                    }
-                }
-            })
-        }
-
-        function getKey(call, cancel){
-            let key = window.localStorage.getItem('api_key')
-
-            if(key){
-                checkKey(key, call, cancel)
-            }
-            else{
-                $.ajax({
-                    dataType: 'json',
-                    url: '/api/v1.0/conf',
-                    crossDomain: true,
-                    success: (json) => {
-                        if(json.apikey){
-                            call()
-                        }
-                        else{
-                            let enter_key = prompt('Введите ключ')
-
-                            if(enter_key) checkKey(enter_key, call, cancel)
-                            else cancel()
-                        }
-                    }
-                })
-            }
         }
 
         function search(){
@@ -459,10 +412,9 @@
             if(query){
                 loading.show()
 
-                getKey(function(){
                     $.ajax({
                         dataType: 'json',
-                        url: '/search&query='+encodeURIComponent(query)+'&apikey='+encodeURIComponent(window.localStorage.getItem('api_key'))+(window.localStorage.getItem('exact') == '1' ? '&exact=true' : ''),
+                        url: '/search?query='+encodeURIComponent(query)+'&apikey='+encodeURIComponent(window.localStorage.getItem('api_key'))+(window.localStorage.getItem('exact') == '1' ? '&exact=true' : ''),
                         crossDomain: true,
                         success: (json) => {
                             loading.hide()
@@ -471,7 +423,7 @@
                                 results = json
 
                                 results.forEach(function(elem){
-                                    let date = new Date(elem.createTime)
+                                    let date = new Date(elem.CreateDate)
 
                                     elem.date = date.getTime()
 
@@ -497,13 +449,7 @@
                             noresults.show()
                         }
                     })
-                },function(){
-                    loading.hide()
-
-                    noresults.show()
-                })
-            }
-            else{
+            }else{
                 empty.show()
             }
         }
