@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" href="./img/favicon.ico">
+
+    <title>Поиск торрентов</title>
+
+    <link rel="preload" href="https://fonts.googleapis.com/css?family=Rubik:300,400&display=auto" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rubik:300,400&display=auto">
+
+    <link rel="search" type="application/opensearchdescription+xml" title="Torlook" href="/opensearch.xml">
+    <link rel="stylesheet" type="text/css" href="./css/icheck-material.css?v=5">
+    <link rel="stylesheet" type="text/css" href="./css/microtip.min.css?v=1">
+    <link rel="stylesheet" type="text/css" href="./css/styles.css?v=15" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script src="./js/jquery.quicksearch.min.js?v=3"></script>
+    <script src="./js/script.js?v=8"></script>
+
+</head>
+
+<body>
+
+
+<div id="page">
+
+    <div class="logo">
+        <!--<img src="./img/logo.svg" class="logo-icon" />-->
+    </div>
+    
+    <div id="searchForm">
+        <form id="search" action="/">
+            <fieldset>
+                <div class="search-line-field">
+                    <input name="s" id="s" type="text" placeholder="Веном 2" value=""/>
+
+                    <input type="submit" value="найти" id="submitButton" />
+                </div>
+            </fieldset>
+        </form>
+
+        <div id="filter">
+            <div class="filter-container">
+                <div class="w2">
+                    <div class="filter-label">Уточнить</div>
+                    <input name="refine" placeholder="Например BDRip, WEB-DL, США" />
+                </div>
+
+                <div class="w2">
+                    <div class="filter-label">Исключить</div>
+                    <input name="exclude" placeholder="Например HEVC" />
+                </div>
+				
+                <div class="w4">
+                    <div class="filter-label">Качество</div>
+                    <select name="quality"></select>
+                </div>
+				<div class="w4">
+                    <div class="filter-label">Тип видео</div>
+                    <select name="type">
+                        <option value="">Любое</option>
+                        <option value="sdr">SDR</option>
+                        <option value="hdr">HDR</option>
+                    </select>
+                </div>
+				<div class="w4">
+                    <div class="filter-label">Озвучка</div>
+                    <select name="voice"></select>
+                </div>
+                <div class="w4" style="display: none">
+                    <div class="filter-label">Сезон</div>
+                    <select name="season"></select>
+                </div>
+
+                <div class="w4" style="display: none">
+                    <div class="filter-label">Категория</div>
+                    <select name="category"></select>
+                </div>
+				
+                <div class="w4">
+                    <div class="filter-label">Трекер</div>
+                    <select name="tracker"></select>
+                </div>
+                <div class="w4" style="display: none">
+                    <div class="filter-label">Год</div>
+                    <select name="year"></select>
+                </div>
+                <div class="w4" style="display: none">
+                    <button class="filter-button">Сбросить фильтр</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="searchInContainer">
+            <div class="icheck-material-cyan">
+                <input type="radio" name="sort" value="sid" id="sortSeeders" checked />
+                <label for="sortSeeders"> по сидам</label>
+            </div>
+
+            <div class="icheck-material-cyan">
+                <input type="radio" name="sort" value="size" id="sortSize"  />
+                <label for="sortSize"> по размеру</label>
+            </div>
+
+            <div class="icheck-material-cyan">
+                <input type="radio" name="sort" value="date" id="sortDate"  />
+                <label for="sortDate"> по дате</label>
+            </div>
+
+            <div class="icheck-material-cyan" style="margin-left: auto; display: none;">
+                <input type="checkbox" name="exact" id="exactSearch" >
+                <label for="exactSearch" id="exactLabel" >Точный поиск</label>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div id="resultsDiv" class="">
+
+        <div class="webResult item">
+            <p><a rel="nofollow"><b></b> </a></p>
+            <div class="h2">
+                <!--noindex-->
+                <a rel="nofollow">tracer</a>
+                <!--/noindex-->
+                <span class="webResultTitle"> 
+                    <span class="size">1.00&nbsp;GB</span> 
+                    <span class="date">2000-01-01</span>
+                    <span class="seeders">⬆ 1</span> 
+                    <span class="leechers">⬇ 1</span>
+
+                    <span class="magnet">
+                        <a class="magneto ut-download-url" href=""></a>
+                    </span>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+
+    <div id="empty" class="msg">Введите название фильма или сериала для поиска.</div>
+    <div id="noresults" class="msg">По вашему запросу мы не чего не нашли.</div>
+    <div id="loading" class="msg">Поиск... ожидайте результатов.</div>
+
+    <script>
+        const content = $('#resultsDiv'),
+            empty   = $('#empty'),
+            loading = $('#loading'),
+            noresults = $('#noresults'),
+            input   = $('#s'),
+            filrt   = $('#filter')
+
+        let results = []
+        let filtred = []
+
+        let filter_search = {
+            voice: [],
+            tracker: []
+        }
+
+        function sort(){
+            content.empty()
+
+            const key = window.localStorage.getItem('sort') || 'sid'
+
+            filtred.sort((c,b)=>{
+                if(c[key] < b[key]) return 1
+                if(c[key] > b[key]) return -1
+                return 0
+            })
+
+            filtred.forEach(function(elem){
+                const item = $(`<div class="webResult item">
+                    <p><a href="`+elem.url+`" target="_blank">`+elem.title+`</a></p>
+                    <div class="info"></div>
+                    <div class="h2">
+						<img class="trackerIco" src="./img/ico/`+elem.tracker+`.ico">
+                        `+elem.tracker+`
+                        <span class="webResultTitle"> 
+                            <span class="size">`+elem.sizeName+`</span> 
+                            <span class="date">`+elem.dateHuman+`</span>
+                            <span class="seeders">⬆ `+(elem.sid || 0)+`</span> 
+                            <span class="leechers">⬇ `+(elem.pir || 0)+`</span>
+
+                            <span class="magnet">
+                                <a class="magneto ut-download-url" href="`+elem.magnet+`"></a>
+                            </span>
+                        </span>
+                    </div>
+                </div>`)
+
+                if(elem.videoInfo){
+                    const info = $(`<div>
+                        <div>
+                            <span>Video</span>
+                            <div>`+(elem.videoInfo.video || '---')+`</div>
+                        </div>
+                        <div>
+                            <span>Audio</span>
+                            <div>`+(elem.videoInfo.audio || '---')+`</div>
+                        </div>
+                        <div>
+                            <span>Subtitle</span>
+                            <div>`+(elem.videoInfo.subtitle || '---')+`</div>
+                        </div>
+                        <div>
+                            <span>Voice</span>
+                            <div>`+(elem.videoInfo.voice || '---')+`</div>
+                        </div>
+                    </div>`)
+
+                    item.find('.info').append(info)
+                }
+
+                if(elem.media && elem.media.length){
+                    const icon = $('<span class="files">≣ ('+elem.media.length+')</span>')
+
+                    const files = $(`<div class="files">
+                            <div class="files-title">Файлы</div>
+                            <div class="files-list"></div>
+                        </div>`)
+
+                    elem.media.forEach(file=>{
+                        $('.files-list',files).append('<div>'+file.path+'</div>')
+                    })
+
+                    icon.on('click',()=>{
+                        files.addClass('show')
+                    })
+
+                    $('.info',item).append(files)
+
+                    $('.webResultTitle',item).prepend(icon)
+                }
+
+                content.append(item)
+            })
+        }
+
+
+        function initFilter(){
+            filter_search.voice    = ["Любая"]
+            filter_search.tracker  = ["Любой"]
+            filter_search.year     = ["Любой"]
+            filter_search.season   = ["Любой"]
+            filter_search.category = ["Любая"]
+
+            let years   = []
+            let seasons = []
+            let types   = []
+            let quality = []
+
+            results.forEach(element => {
+                if(element.voices && element.voices.length){
+                    element.voices.forEach(voice => {
+                        if(filter_search.voice.indexOf(voice) == -1) filter_search.voice.push(voice)
+                    })
+                }
+
+                if(filter_search.tracker.indexOf(element.tracker) === -1) filter_search.tracker.push(element.tracker)
+
+                if(years.indexOf(element.relased) === -1 && element.relased) years.push(element.relased)
+                if(quality.indexOf(element.quality) === -1 && element.quality) quality.push(element.quality)
+
+                if(element.seasons && element.seasons.length){
+                    element.seasons.forEach(s=>{
+                        if(seasons.indexOf(s) === -1 && s) seasons.push(s)
+                    })
+                }
+
+                if(element.types && element.types.length){
+                    element.types.forEach(s=>{
+                        if(types.indexOf(s) === -1 && s) types.push(s)
+                    })
+                }
+            })
+
+            years.sort().reverse() 
+            seasons.sort().reverse()
+            types.sort().reverse() 
+            quality.sort()
+
+            years.splice( 0, 0, "Любой" )
+            seasons.splice( 0, 0, "Любой" )
+            types.splice( 0, 0, "Любая" )
+            quality.splice( 0, 0, "Любое" )
+
+            filter_search.year = years
+            filter_search.season = seasons
+            filter_search.category = types
+            filter_search.quality = quality
+
+            const append = function(name, value){
+                const select = $('[name="'+name+'"]', filrt)
+
+                value.forEach(v=>{
+                    select.append('<option value="'+v+'">'+v+'</option>')
+                })
+
+                select.val(value[0])
+            }
+
+            append('voice', filter_search.voice)
+            append('tracker', filter_search.tracker)
+            append('year', filter_search.year)
+            append('season', filter_search.season)
+            append('category', filter_search.category)
+            append('quality', filter_search.quality)
+        }
+
+        function resetFilter(){
+            $('[name="type"],[name="refine"],[name="exclude"]',filrt).val('')
+            $('[name="quality"],[name="year"],[name="tracker"],[name="voice"],[name="season"],[name="category"]',filrt).each(function(){
+                $(this).val($('option',this).eq(0).attr('value'))
+            })
+            
+        }
+
+        function filter(){
+            filtred = results.filter(element=>{
+                let pass  = false,
+                    any   = false,
+                    nopass = false
+
+                const quality = $('[name="quality"]',filrt).val()
+                const type    = $('[name="type"]',filrt).val()
+                const year    = $('[name="year"]',filrt).val()
+                const tracker = $('[name="tracker"]',filrt).val()
+                const voice   = $('[name="voice"]',filrt).val()
+                const season   = $('[name="season"]',filrt).val()
+                const category   = $('[name="category"]',filrt).val()
+                const refine  = $('[name="refine"]',filrt).val()
+                const exclude = $('[name="exclude"]',filrt).val()
+
+                if(type || refine || exclude || quality !== "Любое"  || year !== "Любой" || tracker !== "Любой" || voice !== "Любая" || season !== "Любой"|| category !== "Любая") any = true
+
+                if(quality !== "Любое"){
+                    if(element.quality == parseInt(quality)) pass = true
+                    else nopass = true
+                }
+
+                if(type){
+                    if(element.videotype == type) pass = true
+                    else nopass = true
+                } 
+
+                if(tracker !== "Любой"){
+                    if(element.tracker == tracker) pass = true
+                    else nopass = true
+                } 
+
+                if(voice !== "Любая"){
+                    if(element.voices.indexOf(voice) !== -1) pass = true
+                    else nopass = true
+                }
+
+                if(category !== "Любая"){
+                    if(element.types.indexOf(category) !== -1) pass = true
+                    else nopass = true
+                }
+
+                if(season !== "Любой"){
+                    if(element.seasons.indexOf(parseInt(season)) !== -1) pass = true
+                    else nopass = true
+                }
+
+                if(year !== "Любой"){
+                    if(element.relased == parseInt(year)) pass = true
+                    else nopass = true
+                }
+
+                if(refine){
+                    if(element.title.toLowerCase().indexOf(refine.toLowerCase()) !== -1) pass = true
+                    else nopass = true
+                }
+
+                if(exclude){
+                    if(element.title.toLowerCase().indexOf(exclude.toLowerCase()) == -1) pass = true
+                    else nopass = true
+                }
+
+                if(any){
+                    if(nopass) return false
+                    else return pass
+                }
+                else return true
+            })
+        }
+
+        function checkKey(key, call, cancel){
+            $.ajax({
+                dataType: 'json',
+                url: '/api/v1.0/conf?apikey='+encodeURIComponent(key),
+                crossDomain: true,
+                success: (json) => {
+                    if(json.apikey){
+                        window.localStorage.setItem('api_key', key)
+
+                        call()
+                    }
+                    else{
+                        let enter_key = prompt('Ключ не вернный, введите ключ')
+
+                        if(enter_key) checkKey(enter_key, call, cancel)
+                        else cancel()
+                    }
+                }
+            })
+        }
+
+        function getKey(call, cancel){
+            let key = window.localStorage.getItem('api_key')
+
+            if(key){
+                checkKey(key, call, cancel)
+            }
+            else{
+                $.ajax({
+                    dataType: 'json',
+                    url: '/api/v1.0/conf',
+                    crossDomain: true,
+                    success: (json) => {
+                        if(json.apikey){
+                            call()
+                        }
+                        else{
+                            let enter_key = prompt('Введите ключ')
+
+                            if(enter_key) checkKey(enter_key, call, cancel)
+                            else cancel()
+                        }
+                    }
+                })
+            }
+        }
+
+        function search(){
+            let query = window.localStorage.getItem('search')
+
+            content.empty()
+
+            empty.hide()
+
+            noresults.hide()
+
+            filrt.hide()
+
+            results = []
+
+            resetFilter()
+
+            $('[name="year"],[name="tracker"],[name="voice"],[name="season"],[name="category"],[name="quality"]',filrt).empty()
+
+            if(query){
+                loading.show()
+
+                getKey(function(){
+                    $.ajax({
+                        dataType: 'json',
+                        url: '/search&query='+encodeURIComponent(query)+'&apikey='+encodeURIComponent(window.localStorage.getItem('api_key'))+(window.localStorage.getItem('exact') == '1' ? '&exact=true' : ''),
+                        crossDomain: true,
+                        success: (json) => {
+                            loading.hide()
+
+                            if(json.length){
+                                results = json
+
+                                results.forEach(function(elem){
+                                    let date = new Date(elem.createTime)
+
+                                    elem.date = date.getTime()
+
+                                    elem.dateHuman = date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2)  + '-' + ('0' + date.getDate()).slice(-2)
+
+                                })
+
+                                initFilter()
+
+                                filter()
+
+                                sort()
+
+                                filrt.show()
+                            }
+                            else{
+                                noresults.show()
+                            }
+                        },
+                        error: (jqXHR, exception) => {
+                            loading.hide()
+
+                            noresults.show()
+                        }
+                    })
+                },function(){
+                    loading.hide()
+
+                    noresults.show()
+                })
+            }
+            else{
+                empty.show()
+            }
+        }
+        
+
+        $('#search').submit(function(e){
+            e.preventDefault()
+
+            window.localStorage.setItem('search', input.val())
+
+            search()
+        })
+
+        if(window.localStorage.getItem('search')){
+            input.val(window.localStorage.getItem('search'))
+        }
+
+        $('input[type=radio][name=sort]').change(function() {
+            window.localStorage.setItem('sort',this.value)
+            
+            if(results.length) sort()
+        });
+
+        if(window.localStorage.getItem('sort')){
+            $('input[type=radio][value='+window.localStorage.getItem('sort')+']').prop('checked', true)
+        }
+
+        if(window.localStorage.getItem('exact') == '1'){
+            $('#exactSearch').prop('checked', true)
+        }
+
+        $('select,input',filrt).on('change',function(){
+            filter()
+
+            sort()
+        })
+
+        let keyuptimer
+
+        $('input',filrt).on('keyup',function(){
+            clearTimeout(keyuptimer)
+
+            keyuptimer = setTimeout(()=>{
+                filter()
+
+                sort()
+            },200)
+        })
+
+        $('.filter-button',filrt).on('click',function(){
+            resetFilter()
+
+            filter()
+
+            sort()
+        })
+
+        $('#exactSearch').change(function(){
+            window.localStorage.setItem('exact',this.checked ? 1 : 0)
+
+            search()
+        })
+
+        
+
+        search()
+        
+    </script>
+
+    
+    <div class="footer">
+        <span>Работает на <a>Crazy Spider</a></span>
+    </div>
+</div>
+
+<a href="#" id="back-to-top" title="To infinity and beyond"><i class="fas fa-space-shuttle fa-rotate-270"></i></a>
+
+</body>
+</html>
