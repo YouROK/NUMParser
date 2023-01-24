@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <option name="projectDefaultTargetUuid" value="a9a36e59-d5bd-408c-bc78-b73e154986a7" />
+    <targets>
+      <target name="yourok@192.168.1.2:22" type="ssh/sftp" uuid="a9a36e59-d5bd-408c-bc78-b73e154986a7">
+        <config>
+          <option name="projectRootOnTarget" value="/home/yourok/Projects/NUMParser" />
+          <option name="serverName" value="yourok@192.168.1.2:22 agent" />
+          <option name="useRsync" value="true" />
+        </config>
+        <ContributedStateBase type="GoLanguageRuntime">
+          <config>
+            <option name="goRoot" value="/usr/local/go/bin/go" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>
