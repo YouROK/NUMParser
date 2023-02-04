@@ -14,14 +14,14 @@ LDFLAGS="-s -w"
 
 #Clean
 go clean -i -r -cache
-#
-#GOARCH="arm64"
-#GOOS="linux"
-#
-#BIN_FILENAME="${OUTPUT}-${GOOS}-${GOARCH}${GOARM}"
-#CMD="GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags='${LDFLAGS}' -o ${OUTPUT}_${GOOS}_${GOARCH} ./cmd/init"
-#echo "${CMD}"
-#eval "${CMD}" || FAILURES="${FAILURES} ${GOOS}/${GOARCH}${GOARM}"
+
+GOARCH="arm64"
+GOOS="darwin"
+
+BIN_FILENAME="${OUTPUT}-${GOOS}-${GOARCH}${GOARM}"
+CMD="GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags='${LDFLAGS}' -o ${OUTPUT}_${GOOS}_${GOARCH} ./cmd"
+echo "${CMD}"
+eval "${CMD}" || FAILURES="${FAILURES} ${GOOS}/${GOARCH}${GOARM}"
 
 GOARCH="amd64"
 GOOS="linux"
@@ -37,3 +37,8 @@ if [[ "${FAILURES}" != "" ]]; then
   echo "${SCRIPT_NAME} failed on: ${FAILURES}"
   exit 1
 fi
+
+rm -rf tmp
+mkdir tmp
+cp dist/* tmp/
+cp -r public tmp/
