@@ -152,7 +152,7 @@ func (self *RutorParser) readCategories() map[string]int {
 	log.Println("Read Rutor categories")
 
 	//var categories = []string{"10"}
-	var categories = []string{"1", "5", "4", "16", "12", "6", "7", "10" /*"17"*/}
+	var categories = []string{"1", "5", "4", "16", "12", "6", "7", "10", "17", "13", "15"}
 	//var categories = []string{"4"}
 	var pages = map[string]int{}
 	var mm sync.Mutex
@@ -270,7 +270,7 @@ func (self *RutorParser) parseTitle(td *models.TorrentDetails, cat string) {
 				td.Names = []string{"V/H/S/94"}
 			} else {
 				td.Name = strings.TrimSpace(re.ReplaceAllString(td.Name, ""))
-				for i, _ := range td.Names {
+				for i := range td.Names {
 					td.Names[i] = strings.TrimSpace(re.ReplaceAllString(td.Names[i], ""))
 				}
 			}
