@@ -139,21 +139,21 @@ func (self *RutorParser) Parse() {
 
 // читаем категории и заносим в таски что парсить
 func (self *RutorParser) readCategories() map[string]int {
-	// 1  - Зарубежные фильмы          | Фильмы
-	// 5  - Наши фильмы                | Фильмы
-	// 4  - Зарубежные сериалы         | Сериалы
-	// 16 - Наши сериалы               | Сериалы
-	// 12 - Научно-популярные фильмы   | Док. сериалы, Док. фильмы
-	// 6  - Телевизор                  | ТВ Шоу
-	// 7  - Мультипликация             | Мультфильмы, Мультсериалы
-	// 10 - Аниме                      | Аниме
-	// 17 - Иностранные релизы         | UA озвучка
+	// 1  - Зарубежные фильмы          	| Фильмы
+	// 5  - Наши фильмы                	| Фильмы
+	// 4  - Зарубежные сериалы         	| Сериалы
+	// 16 - Наши сериалы               	| Сериалы
+	// 12 - Научно-популярные фильмы   	| Док. сериалы, Док. фильмы
+	// 6  - Телевизор                  	| ТВ Шоу
+	// 7  - Мультипликация             	| Мультфильмы, Мультсериалы
+	// 10 - Аниме                      	| Аниме
+	// 17 - Иностранные релизы         	| UA озвучка
+	// 13 - Спорт и Здоровье 			| ТВ Шоу
+	// 15 - Юмор						| ТВ Шоу
 
 	log.Println("Read Rutor categories")
 
-	//var categories = []string{"10"}
 	var categories = []string{"1", "5", "4", "16", "12", "6", "7", "10", "17", "13", "15"}
-	//var categories = []string{"4"}
 	var pages = map[string]int{}
 	var mm sync.Mutex
 
@@ -186,6 +186,10 @@ func (self *RutorParser) parsePage(pl parseLink) []*models.TorrentDetails {
 	body, err := get(pl.Link)
 	if err != nil {
 		log.Println("Error get page:", err, pl.Link)
+		return nil
+	}
+	if !strings.Contains(body, "<title>rutor.info") {
+		log.Println("Not rutor page:", pl.Link)
 		return nil
 	}
 	log.Println("Readed:", pl.Link)
@@ -289,7 +293,7 @@ func (self *RutorParser) parseTitle(td *models.TorrentDetails, cat string) {
 	}
 
 	switch {
-	case cat == "1", cat == "5":
+	case cat == "1", cat == "5", cat == "17":
 		td.Categories = models.CatMovie
 	case cat == "4", cat == "16":
 		td.Categories = models.CatSeries
@@ -299,7 +303,7 @@ func (self *RutorParser) parseTitle(td *models.TorrentDetails, cat string) {
 		} else {
 			td.Categories = models.CatDocMovie
 		}
-	case cat == "6":
+	case cat == "6", cat == "13", cat == "15":
 		td.Categories = models.CatTVShow
 	case cat == "7":
 		if re.MatchString(title) {
