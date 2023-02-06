@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -32,7 +33,8 @@ var (
 
 func Init() {
 	log.Println("Read cache...")
-	buf, err := os.ReadFile("rutor.ls")
+	dir := filepath.Dir(os.Args[0])
+	buf, err := os.ReadFile(filepath.Join(dir, "rutor.ls"))
 	if err == nil {
 		r := flate.NewReader(bytes.NewReader(buf))
 		buf, err = io.ReadAll(r)
@@ -47,7 +49,7 @@ func Init() {
 		}
 	}
 
-	buf, err = os.ReadFile("tmdbs.ls")
+	buf, err = os.ReadFile(filepath.Join(dir, "tmdbs.ls"))
 	if err == nil {
 		r := flate.NewReader(bytes.NewReader(buf))
 		buf, err = io.ReadAll(r)
@@ -61,7 +63,7 @@ func Init() {
 		}
 	}
 
-	buf, err = os.ReadFile("indxs.ls")
+	buf, err = os.ReadFile(filepath.Join(dir, "indxs.ls"))
 	if err == nil {
 		r := flate.NewReader(bytes.NewReader(buf))
 		buf, err = io.ReadAll(r)
@@ -78,7 +80,7 @@ func Init() {
 		indxs = map[string]int64{}
 	}
 
-	//buf, err = os.ReadFile("kpds.ls")
+	//buf, err = os.ReadFile(filepath.Join(dir,"kpds.ls"))
 	//if err == nil {
 	//	r := flate.NewReader(bytes.NewReader(buf))
 	//	buf, err = io.ReadAll(r)

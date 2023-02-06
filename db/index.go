@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func GetIndex(hash string) int64 {
@@ -46,5 +47,6 @@ func SaveIndxs() {
 	w.Write(buf)
 	w.Close()
 
-	os.WriteFile("indxs.ls", b.Bytes(), 0666)
+	dir := filepath.Dir(os.Args[0])
+	os.WriteFile(filepath.Join(dir, "indxs.ls"), b.Bytes(), 0666)
 }
