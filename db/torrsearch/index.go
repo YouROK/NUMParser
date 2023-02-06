@@ -3,7 +3,6 @@ package torrsearch
 import (
 	"NUMParser/db/models"
 	"log"
-	"strconv"
 )
 
 // Index is an inverted Index. It maps tokens to document IDs.
@@ -23,7 +22,7 @@ func Search(text string) []int {
 
 func (idx Index) add(torrs []*models.TorrentDetails) {
 	for ID, torr := range torrs {
-		for _, token := range analyze(torr.Name + " " + torr.GetNames() + " " + strconv.Itoa(torr.Year)) {
+		for _, token := range analyze(torr.Title) {
 			ids := idx[token]
 			if ids != nil && ids[len(ids)-1] == ID {
 				// Don't add same ID twice.
