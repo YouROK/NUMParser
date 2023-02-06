@@ -11,7 +11,7 @@ import (
 var route *gin.Engine
 
 func setupRouter() *gin.Engine {
-	//gin.DisableConsoleColor()
+	gin.DisableConsoleColor()
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 
