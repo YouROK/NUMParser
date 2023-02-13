@@ -3,10 +3,8 @@ package db
 import (
 	"NUMParser/db/models"
 	"NUMParser/db/torrsearch"
-	"bytes"
 	"compress/flate"
 	"encoding/json"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -34,14 +32,14 @@ var (
 func Init() {
 	log.Println("Read cache...")
 	dir := filepath.Dir(os.Args[0])
-	buf, err := os.ReadFile(filepath.Join(dir, "rutor.ls"))
+	ff, err := os.Open(filepath.Join(dir, "rutor.ls"))
 	if err == nil {
-		r := flate.NewReader(bytes.NewReader(buf))
-		buf, err = io.ReadAll(r)
+		defer ff.Close()
+		r := flate.NewReader(ff)
 		r.Close()
 		if err == nil {
 			var ftors []*models.TorrentDetails
-			err = json.Unmarshal(buf, &ftors)
+			err = json.NewDecoder(r).Decode(&ftors)
 			if err == nil {
 				torrs = ftors
 				torrsearch.NewIndex(GetTorrs())
@@ -49,28 +47,28 @@ func Init() {
 		}
 	}
 
-	buf, err = os.ReadFile(filepath.Join(dir, "tmdbs.ls"))
+	ff, err = os.Open(filepath.Join(dir, "tmdbs.ls"))
 	if err == nil {
-		r := flate.NewReader(bytes.NewReader(buf))
-		buf, err = io.ReadAll(r)
+		defer ff.Close()
+		r := flate.NewReader(ff)
 		r.Close()
 		if err == nil {
 			var ents []*models.Entity
-			err = json.Unmarshal(buf, &ents)
+			err = json.NewDecoder(r).Decode(&ents)
 			if err == nil {
 				tmdbs = ents
 			}
 		}
 	}
 
-	buf, err = os.ReadFile(filepath.Join(dir, "indxs.ls"))
+	ff, err = os.Open(filepath.Join(dir, "indxs.ls"))
 	if err == nil {
-		r := flate.NewReader(bytes.NewReader(buf))
-		buf, err = io.ReadAll(r)
+		defer ff.Close()
+		r := flate.NewReader(ff)
 		r.Close()
 		if err == nil {
 			var ind map[string]int64
-			err = json.Unmarshal(buf, &ind)
+			err = json.NewDecoder(r).Decode(&ind)
 			if err == nil {
 				indxs = ind
 			}
