@@ -52,7 +52,7 @@ func GetNewMoviesYear(year int) {
 	var list []*models.TorrentDetails
 
 	for _, torr := range torrs {
-		if torr.Categories == models.CatMovie && torr.Year == year && torr.VideoQuality >= 100 {
+		if (torr.Categories == models.CatMovie || torr.Categories == models.CatCartoonMovie) && torr.Year == year && torr.VideoQuality >= 100 {
 			list = append(list, torr)
 		}
 	}
