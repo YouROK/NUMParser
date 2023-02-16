@@ -36,7 +36,7 @@ func Init() {
 	if err == nil {
 		defer ff.Close()
 		r := flate.NewReader(ff)
-		r.Close()
+		defer r.Close()
 		if err == nil {
 			var ftors []*models.TorrentDetails
 			err = json.NewDecoder(r).Decode(&ftors)
@@ -51,7 +51,7 @@ func Init() {
 	if err == nil {
 		defer ff.Close()
 		r := flate.NewReader(ff)
-		r.Close()
+		defer r.Close()
 		if err == nil {
 			var ents []*models.Entity
 			err = json.NewDecoder(r).Decode(&ents)
@@ -65,7 +65,7 @@ func Init() {
 	if err == nil {
 		defer ff.Close()
 		r := flate.NewReader(ff)
-		r.Close()
+		defer r.Close()
 		if err == nil {
 			var ind map[string]int64
 			err = json.NewDecoder(r).Decode(&ind)
