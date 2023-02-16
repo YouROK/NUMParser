@@ -17,8 +17,8 @@ import (
 
 var (
 	rutorHosts = []string{
-		"http://rutor.lib",
-		//"http://rutor.info",
+		//"http://rutor.lib",
+		"http://rutor.info",
 	}
 	rhPos = 0
 	mhost sync.Mutex
