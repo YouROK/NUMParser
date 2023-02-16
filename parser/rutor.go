@@ -218,7 +218,7 @@ func (self *RutorParser) parsePage(pl parseLink) []*models.TorrentDetails {
 		}
 		itm.Hash = hash
 		linkParam := selTd.Get(1).LastChild.Attr[0].Val
-		itm.Link = getHost() + linkParam
+		itm.Link = linkParam
 		if len(selTd.Nodes) == 4 {
 			itm.Size = node2Text(selTd.Get(2))
 			peers := node2Text(selTd.Get(3))
@@ -337,7 +337,7 @@ func (self *RutorParser) parseDate(date string) time.Time {
 }
 
 func GetBodyLink(torr *models.TorrentDetails) string {
-	body, err := get(torr.Link)
+	body, err := get(getHost() + torr.Link)
 	if err != nil {
 		log.Println("Error get page:", err, torr.Link)
 		return ""
