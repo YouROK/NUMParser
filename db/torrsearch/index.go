@@ -2,7 +2,6 @@ package torrsearch
 
 import (
 	"NUMParser/db/models"
-	"log"
 )
 
 // Index is an inverted Index. It maps tokens to document IDs.
@@ -11,7 +10,6 @@ type Index map[string][]int
 var idx Index
 
 func NewIndex(torrs []*models.TorrentDetails) {
-	log.Println("Index torrs")
 	idx = make(Index)
 	idx.add(torrs)
 }
