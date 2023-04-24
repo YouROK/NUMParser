@@ -1,6 +1,7 @@
 package main
 
 import (
+	"NUMParser/config"
 	"NUMParser/db"
 	"NUMParser/db/models"
 	"NUMParser/movies/tmdb"
@@ -11,6 +12,7 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/jasonlvhit/gocron"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,20 +20,30 @@ import (
 )
 
 type args struct {
-	Port string `arg:"-p" help:"web server port, default 38888"`
+	Port  string `arg:"-p" help:"web server port, default 38888"`
+	Proxy string `arg:"--proxy" help:"proxy for rutor, http://user:password@ip:port"`
 }
 
 var params args
 
 func main() {
-	db.Init()
-	tmdb.Init()
-
 	arg.MustParse(&params)
 
 	if params.Port == "" {
 		params.Port = "38888"
 	}
+
+	if params.Proxy != "" {
+		_, err := url.Parse(params.Proxy)
+		if err != nil {
+			log.Println("Error parse proxy host:", err)
+		} else {
+			config.ProxyHost = params.Proxy
+		}
+	}
+
+	db.Init()
+	tmdb.Init()
 
 	web.Start(params.Port)
 

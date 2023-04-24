@@ -1,6 +1,7 @@
 package client
 
 import (
+	"NUMParser/config"
 	"context"
 	"errors"
 	"golang.org/x/net/proxy"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -104,9 +106,6 @@ func GetTor(link string) (string, error) {
 
 func GetBuf(link, referer, cookie string) ([]byte, error) {
 	var httpClient *http.Client
-	httpClient = &http.Client{
-		Timeout: 120 * time.Second,
-	}
 	req, err := http.NewRequest("GET", link, nil)
 
 	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36")
@@ -115,6 +114,22 @@ func GetBuf(link, referer, cookie string) ([]byte, error) {
 	}
 	if referer != "" {
 		req.Header.Set("referer", referer)
+	}
+
+	if config.ProxyHost != "" {
+		proxyURL, _ := url.Parse(config.ProxyHost)
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyURL),
+		}
+
+		httpClient = &http.Client{
+			Transport: transport,
+			Timeout:   120 * time.Second,
+		}
+	} else {
+		httpClient = &http.Client{
+			Timeout: 120 * time.Second,
+		}
 	}
 
 	resp, err := httpClient.Do(req)

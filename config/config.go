@@ -4,3 +4,5 @@ package config
 const SaveReleasePath = "public/releases"
 
 const ReleasesLimit = 0
+
+var ProxyHost = ""
