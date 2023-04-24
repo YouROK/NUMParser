@@ -8,6 +8,7 @@ import (
 	"NUMParser/releases"
 	"NUMParser/web"
 	"fmt"
+	"github.com/alexflint/go-arg"
 	"github.com/jasonlvhit/gocron"
 	"log"
 	"os"
@@ -16,11 +17,23 @@ import (
 	"time"
 )
 
+type args struct {
+	Port string `arg:"-p" help:"web server port, default 38888"`
+}
+
+var params args
+
 func main() {
 	db.Init()
 	tmdb.Init()
 
-	web.Start("38888")
+	arg.MustParse(&params)
+
+	if params.Port == "" {
+		params.Port = "38888"
+	}
+
+	web.Start(params.Port)
 
 	scanReleases()
 	scanMoviesYears()
