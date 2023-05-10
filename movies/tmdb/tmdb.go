@@ -1,8 +1,8 @@
 package tmdb
 
 import (
-	"NUMParser/db"
 	"NUMParser/db/models"
+	"NUMParser/db/tmdb"
 	"NUMParser/utils"
 	"github.com/jmcvetta/napping"
 	"log"
@@ -41,15 +41,14 @@ func Init() {
 }
 
 func GetVideoDetails(isMovie bool, id int64) *models.Entity {
-
-	ents := db.GetTMDBDetails()
-	for _, ent := range ents {
-		if isMovie && ent.MediaType == "movie" && ent.ID == id {
-			return ent
-		}
-		if !isMovie && ent.MediaType == "tv" && ent.ID == id {
-			return ent
-		}
+	var ent *models.Entity
+	if isMovie {
+		ent = tmdb.GetMovie(id)
+	} else {
+		ent = tmdb.GetTV(id)
+	}
+	if ent != nil {
+		return ent
 	}
 
 	params := map[string]string{}
@@ -73,8 +72,6 @@ func GetVideoDetails(isMovie bool, id int64) *models.Entity {
 		pageParams[k] = v
 	}
 
-	var ent *models.Entity
-
 	err := readPageTmdb(endpoint, params, &ent)
 	if err != nil || ent == nil {
 		return nil
@@ -84,7 +81,7 @@ func GetVideoDetails(isMovie bool, id int64) *models.Entity {
 	titles := alternativeTitles(isMovie, id)
 	ent.Titles = titles
 
-	db.AddTMDB(ent)
+	tmdb.AddTMDB(ent)
 
 	return ent
 }
@@ -102,12 +99,8 @@ func Search(isMovie bool, query string) []*models.Entity {
 }
 
 func FindByID(isMovie bool, id string, idType string) *models.Entity {
-
-	list := db.GetTMDBDetails()
-	for _, e := range list {
-		if e.ImdbID == id {
-			return e
-		}
+	if ent := tmdb.FindIMDB(id); ent != nil {
+		return ent
 	}
 
 	params := napping.Params{}

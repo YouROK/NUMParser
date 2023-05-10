@@ -32,9 +32,10 @@ func get(link string) (string, error) {
 		} else {
 			body, err = client.Get(link)
 		}
-		if err == nil {
+		if err == nil || err == client.Err404 {
 			break
 		}
+
 		log.Println("Error get page,tryes:", i+1, link, err)
 		if i < 5 {
 			time.Sleep(time.Minute)
@@ -45,11 +46,11 @@ func get(link string) (string, error) {
 	return body, err
 }
 
-func getBuf(link, referer string) ([]byte, error) {
+func getBuf(link, referer, cookie string) ([]byte, error) {
 	var body []byte
 	var err error
 	for i := 0; i < 10; i++ {
-		body, err = client.GetBuf(link, referer, "")
+		body, err = client.GetBuf(link, referer, cookie)
 		if err == nil {
 			break
 		}

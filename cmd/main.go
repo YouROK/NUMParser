@@ -45,6 +45,7 @@ func main() {
 	db.Init()
 	tmdb.Init()
 
+	getDbInfo()
 	web.Start(params.Port)
 
 	scanReleases()
@@ -158,10 +159,6 @@ func getDbInfo() {
 		}
 	}
 
-	listTmdb := db.GetTMDBDetails()
-
-	indxs := db.GetIndexes()
-
 	fmt.Println("Movies:", cMovie)
 	fmt.Println("Serials:", cSeries)
 	fmt.Println("Doc Movies:", cDocMovie)
@@ -174,6 +171,4 @@ func getDbInfo() {
 	fmt.Println("Torrents with IMDB:", wIMDB)
 	fmt.Println("Torrents without IMDB:", nIMDB)
 	fmt.Println("Torrents:", len(listTorr))
-	fmt.Println("Tmdb details:", len(listTmdb))
-	fmt.Println("Indexes:", len(indxs))
 }

@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"NUMParser/db"
 	"NUMParser/db/models"
+	"NUMParser/db/rutor"
 	"NUMParser/tasker"
 	"NUMParser/utils"
 	"bytes"
@@ -41,13 +41,11 @@ var (
 
 type RutorParser struct {
 	mu      sync.Mutex
-	tasker  *tasker.Tasker
 	isParse bool
 }
 
 func NewRutor() *RutorParser {
 	rt := new(RutorParser)
-	rt.tasker = tasker.New(10)
 	return rt
 }
 
@@ -82,9 +80,15 @@ func (self *RutorParser) Parse() {
 	defer func() { self.isParse = false }()
 	self.mu.Unlock()
 	pages := self.readCategories()
-	fullScan := len(db.GetTorrs()) < 10000
+
+	var taskers []*tasker.Tasker
 
 	for cat, pgs := range pages {
+		tsk := tasker.New(1, false)
+		tsk.DisableLog()
+		taskers = append(taskers, tsk)
+		dbtorrs := rutor.GetTorrs()
+
 		for i := 0; i < pgs; i++ {
 			page := strconv.Itoa(i)
 			host := getHost()
@@ -94,16 +98,10 @@ func (self *RutorParser) Parse() {
 				Link: link,
 				Cat:  cat,
 			}
-			if fullScan {
-				self.tasker.Add(func() {
-					list := self.parsePage(pl)
-					for _, d := range list {
-						db.AddTorr(d)
-					}
-				})
-			} else {
-				list := self.parsePage(pl)
-				dbtorrs := db.GetTorrs()
+
+			tsk.Add(func(pl interface{}) bool {
+				p := pl.(parseLink)
+				list := self.parsePage(p)
 				finds := 0
 				for _, d := range list {
 					for _, dbtorr := range dbtorrs {
@@ -111,49 +109,23 @@ func (self *RutorParser) Parse() {
 							finds++
 						}
 					}
-					db.AddTorr(d)
+					rutor.AddTorr(d)
 				}
 				if finds == len(list) {
-					break
+					return false
 				}
-			}
+				return true
+			}, pl)
 		}
 	}
 
-	if fullScan {
-		self.tasker.Run()
-		self.tasker.Wait()
-		db.SaveTorrs()
-	} else {
-		// Если сканирование не дошло до конца смотрим в конце торренты
-		for cat, pgs := range pages {
-			for i := pgs; i > 0; i++ {
-				page := strconv.Itoa(i)
-				host := getHost()
-				link := host + "/browse/" + page + "/" + cat + "/0/0"
-				pl := parseLink{
-					Host: host,
-					Link: link,
-					Cat:  cat,
-				}
-				list := self.parsePage(pl)
-				dbtorrs := db.GetTorrs()
-				finds := 0
-				for _, d := range list {
-					for _, dbtorr := range dbtorrs {
-						if d.Hash == dbtorr.Hash {
-							finds++
-						}
-					}
-					db.AddTorr(d)
-				}
-				if finds == len(list) {
-					break
-				}
-			}
-		}
-		db.SaveTorrs()
+	for _, t := range taskers {
+		go t.Run()
 	}
+	for _, t := range taskers {
+		t.Wait()
+	}
+	rutor.SaveTorrs()
 }
 
 // читаем категории и заносим в таски что парсить

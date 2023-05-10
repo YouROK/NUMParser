@@ -3,7 +3,6 @@ package releases
 import (
 	"NUMParser/db"
 	"NUMParser/db/models"
-	"NUMParser/movies/kp"
 	"NUMParser/parser"
 	"NUMParser/utils"
 	"bytes"

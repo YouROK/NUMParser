@@ -66,11 +66,6 @@ type TorrentDetails struct {
 	AudioQuality int
 }
 
-type TorrentFile struct {
-	Name string
-	Size int64
-}
-
 func (d TorrentDetails) GetNames() string {
 	return strings.Join(d.Names, " ")
 }
