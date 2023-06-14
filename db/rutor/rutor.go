@@ -4,9 +4,12 @@ import (
 	"NUMParser/db/db"
 	"NUMParser/db/models"
 	"NUMParser/db/torrsearch"
+	"compress/flate"
 	"encoding/json"
 	bolt "go.etcd.io/bbolt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -115,6 +118,7 @@ func SaveTorrs() {
 	if err != nil {
 		log.Fatalln("Error write to db rutor:", err)
 	}
+	saveRutorLS()
 	torrsearch.NewIndex(torrs)
 	IsTorrsChange = false
 }
@@ -135,4 +139,28 @@ func removeOldTorr() {
 	}
 
 	torrs = list
+}
+
+func saveRutorLS() {
+	dir := filepath.Dir(os.Args[0])
+	ff, err := os.Create(filepath.Join(dir, "rutor.ls"))
+	if err != nil {
+		log.Println("Error save torrs:", err)
+		return
+	}
+	defer ff.Close()
+
+	w, err := flate.NewWriter(ff, flate.BestCompression)
+	if err != nil {
+		log.Println("Error save torrs:", err)
+		return
+	}
+	defer w.Close()
+
+	enc := json.NewEncoder(w)
+	err = enc.Encode(torrs)
+	if err != nil {
+		log.Println("Error save torrs:", err)
+		return
+	}
 }
