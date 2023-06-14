@@ -4,14 +4,15 @@ import (
 	"NUMParser/config"
 	"context"
 	"errors"
-	"golang.org/x/net/proxy"
-	"io/ioutil"
+	"github.com/parnurzeal/gorequest"
+	"io"
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"time"
 )
+
+var Err404 = errors.New("404 not found")
 
 func GetNic(link, referer, cookie string) (string, error) {
 	var (
@@ -65,87 +66,53 @@ func GetNic(link, referer, cookie string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(body), nil
-}
-
-func Get(link string) (string, error) {
-	buf, err := GetBuf(link, "", "")
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-func GetTor(link string) (string, error) {
-	proxyUrl := "192.168.1.2:9050"
-	dialer, err := proxy.SOCKS5("tcp", proxyUrl, nil, proxy.Direct)
-	dialContext := func(ctx context.Context, network, address string) (net.Conn, error) {
-		return dialer.Dial(network, address)
-	}
-	transport := &http.Transport{DialContext: dialContext,
-		DisableKeepAlives: true}
-	cl := &http.Client{Transport: transport}
-
-	resp, err := cl.Get(link)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
-}
-
-func GetBuf(link, referer, cookie string) ([]byte, error) {
-	var httpClient *http.Client
-	req, err := http.NewRequest("GET", link, nil)
-
-	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36")
-	if cookie != "" {
-		req.Header.Set("cookie", cookie)
-	}
-	if referer != "" {
-		req.Header.Set("referer", referer)
-	}
-
-	if config.ProxyHost != "" {
-		proxyURL, _ := url.Parse(config.ProxyHost)
-		transport := &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
-		}
-
-		httpClient = &http.Client{
-			Transport: transport,
-			Timeout:   120 * time.Second,
-		}
-	} else {
-		httpClient = &http.Client{
-			Timeout: 120 * time.Second,
-		}
-	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode == 404 {
 		log.Println("Error get link:", link, resp.StatusCode, resp.Status)
-		return nil, errors.New(resp.Status)
+		return "", Err404
+	} else if resp.StatusCode != 200 {
+		log.Println("Error get link:", link, resp.StatusCode, resp.Status)
+		return "", errors.New(resp.Status)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return body, nil
+	return string(body), nil
+}
+
+func Get(link string) *gorequest.SuperAgent {
+	return GetParam(link, "", "")
+}
+
+func GetParam(link, referer, cookie string) *gorequest.SuperAgent {
+	agent := gorequest.New()
+
+	if cookie != "" {
+		header := http.Header{}
+		header.Add("Cookie", cookie)
+		request := http.Request{
+			Header: header,
+		}
+		agent.Cookies = request.Cookies()
+	}
+
+	if referer != "" {
+		agent.AppendHeader("referer", referer)
+	}
+
+	if config.UseProxy {
+		proxyHost := getProxyFromList()
+		if proxyHost == "" {
+			proxyHost = config.ProxyHost
+		}
+		if proxyHost != "" {
+			agent.Proxy(proxyHost)
+		}
+	} else if config.ProxyHost != "" {
+		agent.Proxy(config.ProxyHost)
+	}
+	agent.Timeout(30 * time.Second)
+	return agent.Get(link)
 }
