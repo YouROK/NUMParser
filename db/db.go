@@ -8,7 +8,7 @@ import (
 )
 
 func Init() {
-	log.Println("Open db")
+	log.Println("Open db...")
 	db.Init()
 
 	log.Println("Read db...")
