@@ -20,8 +20,9 @@ import (
 )
 
 type args struct {
-	Port  string `arg:"-p" help:"web server port, default 38888"`
-	Proxy string `arg:"--proxy" help:"proxy for rutor, http://user:password@ip:port"`
+	Port     string `arg:"-p" help:"web server port, default 38888"`
+	Proxy    string `arg:"--proxy" help:"proxy for rutor, http://user:password@ip:port"`
+	UseProxy bool   `arg:"--useproxy" help:"enable auto proxy"`
 }
 
 var params args
@@ -42,7 +43,10 @@ func main() {
 		}
 	}
 
+	config.UseProxy = params.UseProxy
+
 	db.Init()
+	loadProxy()
 	tmdb.Init()
 
 	getDbInfo()
@@ -60,6 +64,7 @@ func main() {
 }
 
 func scanReleases() {
+	loadProxy()
 	getDbInfo()
 	rutorParser := parser.NewRutor()
 	rutorParser.Parse()
@@ -74,6 +79,7 @@ func scanReleases() {
 }
 
 func scanMoviesYears() {
+	loadProxy()
 	releases.GetLegends()
 	for y := 1980; y <= time.Now().Year(); y++ {
 		releases.GetNewMoviesYear(y)
@@ -82,6 +88,7 @@ func scanMoviesYears() {
 	copy()
 }
 
+// Exec script for copy any files
 func copy() {
 	dir := filepath.Dir(os.Args[0])
 	logOut, err := exec.Command("/bin/sh", filepath.Join(dir, "copy.sh")).CombinedOutput()
@@ -90,6 +97,20 @@ func copy() {
 	}
 	output := string(logOut)
 	log.Println(output)
+}
+
+// Exec script for load proxy, script mast create file proxy.list
+func loadProxy() {
+	if config.UseProxy {
+		log.Println("Load proxy list...")
+		dir := filepath.Dir(os.Args[0])
+		logOut, err := exec.Command("/bin/sh", filepath.Join(dir, "proxy.sh")).CombinedOutput()
+		if err != nil {
+			log.Println("Error proxy releases:", err)
+		}
+		output := string(logOut)
+		log.Println(output)
+	}
 }
 
 func calcTime() *time.Time {
