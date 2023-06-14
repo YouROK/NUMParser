@@ -1,32 +1,41 @@
 package tmdb
 
 import (
-	"github.com/jmcvetta/napping"
-	"log"
+	"NUMParser/client"
+	"errors"
+	"net/url"
 	"time"
 )
 
-func readPageTmdb(path string, params napping.Params, results interface{}) error {
-	var err error
-	var resp *napping.Response
-	for i := 0; i < 5; i++ {
-		urlParams := params.AsUrlValues()
-		resp, err = napping.Get(
-			tmdbEndpoint+path,
-			&urlParams,
-			&results,
-			nil,
-		)
+func readPageTmdb(path string, params map[string]string, results interface{}) error {
 
-		if err != nil {
-			log.Println(err)
-		} else if resp.Status() == 304 {
-			time.Sleep(time.Second * 5)
-			continue
-		} else if resp.Status() != 200 {
-			log.Printf("Bad status %s: %d\n", path, resp.Status())
-		}
-		break
+	link := tmdbEndpoint + path
+	querys := url.Values{}
+	for key, value := range params {
+		querys.Set(key, value)
 	}
-	return err
+
+	link += "?" + querys.Encode()
+
+	retryCodes := []int{
+		429,
+		500, 501, 502, 503, 504,
+	}
+
+	resp, _, errs := client.Get(link).
+		AppendHeader("accept", "application/json").
+		AppendHeader("Authorization", TMDBAuthKey).
+		Retry(5, time.Second*20, retryCodes...).
+		Timeout(time.Second * 120).
+		EndStruct(results)
+
+	if len(errs) > 0 {
+		return errs[0]
+	}
+
+	if resp.StatusCode != 200 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
 }

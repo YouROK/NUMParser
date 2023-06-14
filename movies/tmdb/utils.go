@@ -29,7 +29,7 @@ func GetGenres(gtype string) []*models.Genre {
 	var genres *models.GenresRequest
 
 	urlPages := napping.Params{
-		"api_key":  apiKey,
+		//"api_key":  apiKey,
 		"language": "ru",
 	}
 	endpoint := "genre/" + gtype + "/list"
