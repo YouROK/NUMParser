@@ -12,7 +12,6 @@ import (
 func get(link string) (string, error) {
 	var body string
 	var err error
-	//TODO cli.Retry()
 	for i := 0; i < 10; i++ {
 		if strings.Contains(link, "rutor.lib") {
 			body, err = client.GetNic(link, "", "")
