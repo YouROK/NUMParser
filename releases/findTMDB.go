@@ -17,7 +17,7 @@ import (
 func FillTMDB(label string, isMovie bool, torrs []*models.TorrentDetails) []*models.Entity {
 	list := make([]*models.Entity, len(torrs))
 	var mu sync.Mutex
-	utils.PForLim(torrs, 10, func(i int, t *models.TorrentDetails) {
+	utils.PForLim(torrs, 20, func(i int, t *models.TorrentDetails) {
 		//for i, t := range torrs {
 		var md *models.Entity
 		indx := tmdb2.GetIndex(t.Hash)
@@ -43,13 +43,11 @@ func FillTMDB(label string, isMovie bool, torrs []*models.TorrentDetails) []*mod
 					mu.Unlock()
 				}
 			}
-			if md != nil {
-				tmdb2.SetIndex(t, md)
-			}
 		}
 		if md == nil {
 			log.Println(label+":", "Torr", i, "/", len(torrs), "not found in TMDB:", t.Title, t.Link)
 		} else {
+			tmdb2.SetIndex(t, md)
 			md.SetTorrent(t)
 			log.Println(label+":", "Find torr", i, "/", len(torrs), "in TMDB:", t.Title)
 		}
