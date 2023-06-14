@@ -9,28 +9,19 @@ import (
 	"time"
 )
 
-func getHash(magnet string) string {
-	//magnet:?xt=urn:btih:1debb44e9e9ac785aaa4c26507534e1357672a22&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce
-	pos := strings.Index(magnet, "btih:")
-	if pos == -1 {
-		return ""
-	}
-	magnet = magnet[pos+5:]
-	pos = strings.Index(magnet, "&")
-	if pos == -1 {
-		return strings.ToLower(magnet)
-	}
-	return strings.ToLower(magnet[:pos])
-}
-
 func get(link string) (string, error) {
 	var body string
 	var err error
+	//TODO cli.Retry()
 	for i := 0; i < 10; i++ {
 		if strings.Contains(link, "rutor.lib") {
 			body, err = client.GetNic(link, "", "")
 		} else {
-			body, err = client.Get(link)
+			_, bodyS, errs := client.Get(link).End()
+			body = bodyS
+			if len(errs) > 0 {
+				err = errs[0]
+			}
 		}
 		if err == nil || err == client.Err404 {
 			break
@@ -50,7 +41,11 @@ func getBuf(link, referer, cookie string) ([]byte, error) {
 	var body []byte
 	var err error
 	for i := 0; i < 10; i++ {
-		body, err = client.GetBuf(link, referer, cookie)
+		_, bodyS, errs := client.GetParam(link, referer, cookie).EndBytes()
+		body = bodyS
+		if len(errs) > 0 {
+			err = errs[0]
+		}
 		if err == nil {
 			break
 		}
@@ -70,4 +65,18 @@ func replaceBadName(name string) string {
 	name = strings.ReplaceAll(name, "ё", "е")
 	name = strings.ReplaceAll(name, "щ", "ш")
 	return name
+}
+
+func getHash(magnet string) string {
+	//magnet:?xt=urn:btih:1debb44e9e9ac785aaa4c26507534e1357672a22&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce
+	pos := strings.Index(magnet, "btih:")
+	if pos == -1 {
+		return ""
+	}
+	magnet = magnet[pos+5:]
+	pos = strings.Index(magnet, "&")
+	if pos == -1 {
+		return strings.ToLower(magnet)
+	}
+	return strings.ToLower(magnet[:pos])
 }
