@@ -62,6 +62,7 @@ type TorrentDetails struct {
 	Magnet       string
 	Hash         string
 	IMDBID       string
+	KPID         string
 	VideoQuality int
 	AudioQuality int
 }
