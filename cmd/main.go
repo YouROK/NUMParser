@@ -23,6 +23,8 @@ type args struct {
 	Port     string `arg:"-p" help:"web server port, default 38888"`
 	Proxy    string `arg:"--proxy" help:"proxy for rutor, http://user:password@ip:port"`
 	UseProxy bool   `arg:"--useproxy" help:"enable auto proxy"`
+
+	DBView bool `arg:"--dbview" help:"view all db"`
 }
 
 var params args
@@ -74,8 +76,9 @@ func scanReleases() {
 	releases.GetNewTVs()
 	releases.GetNewCartoons()
 	releases.GetNewCartoonsTV()
+	releases.GetNewAnime()
 	db.SaveAll()
-	copy()
+	copySH()
 }
 
 func scanMoviesYears() {
@@ -85,11 +88,11 @@ func scanMoviesYears() {
 		releases.GetNewMoviesYear(y)
 	}
 	db.SaveAll()
-	copy()
+	copySH()
 }
 
 // Exec script for copy any files
-func copy() {
+func copySH() {
 	dir := filepath.Dir(os.Args[0])
 	logOut, err := exec.Command("/bin/sh", filepath.Join(dir, "copy.sh")).CombinedOutput()
 	if err != nil {
@@ -186,7 +189,7 @@ func getDbInfo() {
 	fmt.Println("Doc Serials:", cDocSeries)
 	fmt.Println("Cartoons:", cCartoonMovie)
 	fmt.Println("Cartoons Serial:", cCartoonSeries)
-	fmt.Println("TV  Show:", cTVShow)
+	fmt.Println("TV Show:", cTVShow)
 	fmt.Println("Animes:", cAnime)
 
 	fmt.Println("Torrents with IMDB:", wIMDB)
