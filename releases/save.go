@@ -60,13 +60,26 @@ func save(fname string, ents []*models.Entity) {
 				Torrent:     []*Torrent{&t},
 			}
 			rid.Items = append(rid.Items, tid)
+		} else {
+			if e == nil {
+				log.Println("Error save, empty ent")
+			} else if e.GetTorrent() == nil {
+				log.Println("Error save, empty torrent:", e.Title)
+			}
 		}
 	}
 
-	os.MkdirAll(config.SaveReleasePath, 0777)
-	err := zip(rid, filepath.Join(config.SaveReleasePath, fname))
-	if err != nil {
-		log.Println("Error save:", err)
+	if len(rid.Items) > 0 {
+		os.MkdirAll(config.SaveReleasePath, 0777)
+		err := zip(rid, filepath.Join(config.SaveReleasePath, fname))
+		if err != nil {
+			log.Println("Error save:", err)
+		}
+	} else {
+		log.Println("**********************************************************")
+		log.Println("Empty rid", rid)
+		log.Println("Len ents", len(ents))
+		log.Println("**********************************************************")
 	}
 }
 
@@ -77,9 +90,6 @@ func zip(rid *ReleasesID, fname string) error {
 	}
 	defer ff.Close()
 	zw := gzip.NewWriter(ff)
-	if err != nil {
-		return err
-	}
 	defer zw.Close()
 
 	enc := json.NewEncoder(zw)
