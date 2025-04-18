@@ -142,6 +142,7 @@ func removeOldTorr() {
 }
 
 func saveRutorLS() {
+	log.Println("Save torrents rutor.ls")
 	dir := filepath.Dir(os.Args[0])
 	ff, err := os.Create(filepath.Join(dir, "rutor.ls"))
 	if err != nil {
