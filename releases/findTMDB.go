@@ -67,7 +67,8 @@ func FindTMDBID(isMovie bool, torr *models.TorrentDetails) *models.Entity {
 		return nil
 	}
 
-	ids := ""
+	imdbID := ""
+	kpID := ""
 
 	doc.Find("table#details").Find("a").Each(func(i int, selection *goquery.Selection) {
 		if link, ok := selection.Attr("href"); ok {
@@ -75,19 +76,43 @@ func FindTMDBID(isMovie bool, torr *models.TorrentDetails) *models.Entity {
 				link = strings.TrimRight(link, "/")
 				arr := strings.Split(link, "/")
 				if len(arr) > 0 {
-					ids = arr[len(arr)-1]
-					return
+					imdbID = arr[len(arr)-1]
+				}
+			}
+			if strings.Contains(link, "www.kinopoisk.ru") {
+				link = strings.TrimRight(link, "/")
+				arr := strings.Split(link, "/")
+				if len(arr) > 0 {
+					kpID = arr[len(arr)-1]
 				}
 			}
 		}
 	})
-	if ids == "" {
+	if imdbID == "" && kpID == "" {
 		return nil
 	}
 
-	torr.IMDBID = ids
+	torr.IMDBID = imdbID
+	torr.KPID = kpID
 
-	return tmdb.FindByID(isMovie, ids, "imdb_id")
+	if imdbID != "" {
+		return tmdb.FindByID(isMovie, imdbID, "imdb_id")
+	}
+
+	//if kpID != "" {
+	//	var result *struct {
+	//		Status string `json:"status"`
+	//		Data   *struct {
+	//			IDTmdb       int64  `json:"id_tmdb,omitempty"`
+	//			SeasonsCount *int64 `json:"seasons_count,omitempty"`
+	//		} `json:"data,omitempty"`
+	//	}
+	//	client.Get("https://api.alloha.tv/?token=04941a9a3ca3ac16e2b4327347bbc1&kp=" + kpID).EndStruct(&result)
+	//	if result != nil && result.Data != nil && result.Data.IDTmdb != 0 {
+	//		return tmdb.GetVideoDetails(isMovie, int64(result.Data.IDTmdb))
+	//	}
+	//}
+	return nil
 }
 
 func FindTMDB(isMovie bool, torr *models.TorrentDetails) *models.Entity {
