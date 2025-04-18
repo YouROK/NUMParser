@@ -12,6 +12,8 @@ import (
 func get(link string) (string, error) {
 	var body string
 	var err error
+	//fix rutor link with \t
+	link = strings.ReplaceAll(link, "\t", "%20")
 	for i := 0; i < 10; i++ {
 		if strings.Contains(link, "rutor.lib") {
 			body, err = client.GetNic(link, "", "")
