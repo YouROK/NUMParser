@@ -29,3 +29,11 @@ type Torrent struct {
 	Quality  int    `json:"quality,omitempty"`
 	Voice    int    `json:"voice,omitempty"`
 }
+
+type CollectionId struct {
+	Name         string    `json:"name"`
+	Overview     string    `json:"overview"`
+	Parts        []*TmdbId `json:"parts"`
+	PosterPath   string    `json:"poster_path"`
+	BackdropPath string    `json:"backdrop_path"`
+}
